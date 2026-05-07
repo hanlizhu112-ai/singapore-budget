@@ -1,0 +1,118 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+  background: #f3f8fb;
+  color: #1f2933;
+}
+
+.container {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  background: linear-gradient(180deg, #dff6ff 0%, #f7fbff 35%, #ffffff 100%);
+}
+
+h1 {
+  margin: 16px 0 8px;
+  text-align: center;
+  font-size: 25px;
+  line-height: 1.3;
+  color: #064b6b;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #5f6c72;
+  margin-bottom: 20px;
+}
+
+.form-box {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(6, 75, 107, 0.12);
+}
+
+label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d9e2ec;
+  border-radius: 14px;
+  font-size: 16px;
+  background: #f8fafc;
+  outline: none;
+}
+
+input:focus {
+  border-color: #0b8fcb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(11, 143, 203, 0.12);
+}
+
+button {
+  width: 100%;
+  height: 52px;
+  margin-top: 24px;
+  border: none;
+  border-radius: 16px;
+  background: #0b8fcb;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+  background: #0875a7;
+}
+
+.result-box {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f0f9ff;
+  border: 1px solid #cdeeff;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* 手机小屏幕优化 */
+@media screen and (max-width: 390px) {
+  .container {
+    padding: 16px 12px 28px;
+  }
+
+  h1 {
+    font-size: 23px;
+  }
+
+  .form-box {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  input {
+    height: 46px;
+  }
+
+  button {
+    height: 50px;
+  }
+}

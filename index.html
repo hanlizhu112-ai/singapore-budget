@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新加坡旅行预算计算器</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>新加坡旅行预算计算器</h1>
+    <p class="subtitle">输入你的旅行费用，看看 5000 元预算够不够</p>
+
+    <div class="form-box">
+      <label>往返机票（元）</label>
+      <input type="number" id="flight" placeholder="例如：1800">
+
+      <label>酒店住宿（元）</label>
+      <input type="number" id="hotel" placeholder="例如：1200">
+
+      <label>吃饭费用（元）</label>
+      <input type="number" id="food" placeholder="例如：800">
+
+      <label>交通费用（元）</label>
+      <input type="number" id="transport" placeholder="例如：300">
+
+      <label>景点门票（元）</label>
+      <input type="number" id="ticket" placeholder="例如：500">
+
+      <label>购物预算（元）</label>
+      <input type="number" id="shopping" placeholder="例如：700">
+
+      <label>其他费用（元）</label>
+      <input type="number" id="other" placeholder="例如：200">
+
+      <button onclick="calculateBudget()">计算总预算</button>
+
+      <div id="result" class="result-box">
+        请先输入费用，然后点击计算。
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
