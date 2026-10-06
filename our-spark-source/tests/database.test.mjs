@@ -39,6 +39,12 @@ test('real PostgreSQL permissions, capability checks and daily records',async t=
     }finally{await db.exec('reset role');}
    }
   });
+  await t.test('exposed API uses invoker privileges; only private capability gateways are elevated',async()=>{
+   const exposed=await db.query("select p.proname,p.prosecdef from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'our_spark_%'");
+   assert.equal(exposed.rows.length,5);assert.ok(exposed.rows.every(x=>x.prosecdef===false));
+   const helpers=await db.query("select has_function_privilege('anon','private_spark.token_hash(text)','execute') as hash,has_function_privilege('anon','private_spark.state(text)','execute') as state");
+   assert.deepEqual(helpers.rows[0],{hash:false,state:true});
+  });
   await t.test('creation requires a separate private setup key',async()=>{
    await assert.rejects(call(db,'create',[token(),'我','对方',token(),token()]),e=>e.code==='PT403');
    assert.equal((await db.query('select count(*) from private_spark.rooms')).rows[0].count,0);

@@ -29,6 +29,18 @@ alter table private_spark.settings enable row level security;
 alter table private_spark.rooms enable row level security;
 alter table private_spark.checkins enable row level security;
 revoke all on all tables in schema private_spark from public, anon, authenticated;
+-- Block direct table access even if a future change accidentally adds a grant.
+-- Room operations go through the capability-checking private gateways below.
+do $policies$
+declare v_table text;
+begin
+  foreach v_table in array array['settings','rooms','checkins'] loop
+    if not exists(select 1 from pg_catalog.pg_policies where schemaname='private_spark' and tablename=v_table and policyname='block_direct_client_access') then
+      execute pg_catalog.format('create policy block_direct_client_access on private_spark.%I as restrictive for all to anon,authenticated using(false) with check(false)',v_table);
+    end if;
+  end loop;
+end;
+$policies$;
 
 create or replace function private_spark.token_hash(p_token text)
 returns text language sql immutable strict set search_path = '' as $$
@@ -50,7 +62,7 @@ begin
 end; $$;
 
 create or replace function private_spark.state(p_key text)
-returns jsonb language plpgsql stable set search_path = '' as $$
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
 declare
   v_room private_spark.rooms; v_role integer; v_hash text; v_id uuid;
   v_today date := private_spark.day_key(now()); v_days date[];
@@ -85,14 +97,14 @@ begin
 end; $$;
 
 create or replace function public.our_spark_probe()
-returns jsonb language sql stable security definer set search_path = '' as $$
-  select jsonb_build_object('ok',true,'version','1.1.0','today',private_spark.day_key(now()));
+returns jsonb language sql stable security invoker set search_path = '' as $$
+  select jsonb_build_object('ok',true,'version','1.1.0','today',(now() at time zone 'Asia/Shanghai')::date);
 $$;
 create or replace function public.our_spark_state(p_key text)
-returns jsonb language sql stable security definer set search_path = '' as $$
+returns jsonb language sql stable security invoker set search_path = '' as $$
   select private_spark.state(p_key);
 $$;
-create or replace function public.our_spark_create(
+create or replace function private_spark.create_room(
   p_setup_token text,p_owner text,p_partner text,p_owner_token text,p_partner_token text
 )
 returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -124,7 +136,7 @@ begin
   update private_spark.settings set setup_hash=null where id=true;
   return private_spark.state(v_id::text||'.'||p_owner_token);
 end; $$;
-create or replace function public.our_spark_checkin(p_key text)
+create or replace function private_spark.checkin(p_key text)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_state jsonb; v_changed integer;
 begin
@@ -135,7 +147,7 @@ begin
   get diagnostics v_changed = row_count;
   return private_spark.state(p_key) || jsonb_build_object('added',v_changed>0);
 end; $$;
-create or replace function public.our_spark_export(p_key text)
+create or replace function private_spark.export_records(p_key text)
 returns jsonb language plpgsql stable security definer set search_path = '' as $$
 declare v_state jsonb; v_events jsonb;
 begin
@@ -148,7 +160,30 @@ begin
     'exportedAt',now(),'total',v_state->'total','events',v_events);
 end; $$;
 
+-- Public API functions run with caller privileges. Privileged implementations
+-- live in an unexposed schema and authorize every record operation by a 256-bit
+-- entry capability. This app deliberately does not register visitors with Auth.
+create or replace function public.our_spark_create(
+  p_setup_token text,p_owner text,p_partner text,p_owner_token text,p_partner_token text
+)
+returns jsonb language sql security invoker set search_path = '' as $$
+  select private_spark.create_room(p_setup_token,p_owner,p_partner,p_owner_token,p_partner_token);
+$$;
+create or replace function public.our_spark_checkin(p_key text)
+returns jsonb language sql security invoker set search_path = '' as $$
+  select private_spark.checkin(p_key);
+$$;
+create or replace function public.our_spark_export(p_key text)
+returns jsonb language sql stable security invoker set search_path = '' as $$
+  select private_spark.export_records(p_key);
+$$;
+
 revoke all on all functions in schema private_spark from public, anon, authenticated;
+grant usage on schema private_spark to anon,authenticated;
+grant execute on function private_spark.state(text) to anon,authenticated;
+grant execute on function private_spark.create_room(text,text,text,text,text) to anon,authenticated;
+grant execute on function private_spark.checkin(text) to anon,authenticated;
+grant execute on function private_spark.export_records(text) to anon,authenticated;
 revoke all on function public.our_spark_probe() from public;
 revoke all on function public.our_spark_state(text) from public;
 revoke all on function public.our_spark_create(text,text,text,text,text) from public;

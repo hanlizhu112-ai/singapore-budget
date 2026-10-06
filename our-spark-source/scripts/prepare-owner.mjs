@@ -5,6 +5,6 @@ const config=normalizeConfig({url:process.argv[2],publishableKey:process.argv[3]
 const setup=secureToken();
 const digest=createHash('sha256').update(setup).digest('hex');
 mkdirSync('.private-setup',{recursive:true,mode:0o700});
-writeFileSync('.private-setup/activate.sql',`update private_spark.settings set setup_hash='${digest}' where id=true;\n`,{mode:0o600});
+writeFileSync('.private-setup/activate.sql',`update private_spark.settings set setup_hash='${digest}' where id=true and not exists (select 1 from private_spark.rooms);\n`,{mode:0o600});
 writeFileSync('.private-setup/owner-entry.txt',makeEntryLink('https://hanlizhu112-ai.github.io/singapore-budget/our-spark-test/',config,setup,'setup')+'\n',{mode:0o600});
 console.log('Generated the private SQL activation file and owner creation link in .private-setup.');
