@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {getFireStage,getNextStage,MILESTONES} from '../src/stages.mjs';
+import {getFireStage,getNextStage,isStageLocked,MILESTONES} from '../src/stages.mjs';
 import {createCloudClient} from '../src/cloud.mjs';
 
 test('growth thresholds include 60 days and existing 33-day rooms immediately show a bonfire',()=>{
@@ -38,4 +38,11 @@ test('both existing entries reopen the same 33-day room and gallery previews lea
     assert.deepEqual(await reopened.importEntry({}),saved);
   }
   assert.deepEqual(requests,['our_spark_state','our_spark_export','our_spark_state','our_spark_export']);
+});
+
+test('60-day and 100-day artwork stays locked until its own threshold, without hiding earlier previews',()=>{
+  for(const [days,locked] of [[0,[60,100]],[33,[60,100]],[59,[60,100]],[60,[100]],[99,[100]],[100,[]],[365,[]]]){
+    assert.deepEqual(MILESTONES.filter(stage=>isStageLocked(stage,days)).map(stage=>stage.day),locked,`${days} day room`);
+  }
+  assert.equal(isStageLocked(getFireStage(60),undefined),true);
 });

@@ -14,3 +14,8 @@ export function getFireStage(streak) {
 export function getNextStage(streak) {
   return MILESTONES.find(stage => stage.day > (Number.isFinite(streak) ? streak : 0)) ?? null;
 }
+
+// Later forms remain a surprise until the room reaches their streak threshold.
+export function isStageLocked(stage, streak) {
+  return stage.day >= 60 && (!Number.isFinite(streak) || streak < stage.day);
+}
