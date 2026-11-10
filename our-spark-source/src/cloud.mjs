@@ -73,6 +73,8 @@ export function createCloudClient({config,fetchImpl=globalThis.fetch,storage,hre
       if(!credential)throw Object.assign(new Error('请创建空间，或打开你的专属入口。'),{status:401});
       return rpc(payload?.action==='checkin'?'checkin':'state',{p_key:credential});
     },
+    async capsules(){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('capsules',{p_key:credential});},
+    async sealCapsule(day,message){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('seal_capsule',{p_key:credential,p_day:day,p_message:message});},
     async probe(){return rpc('probe');},
     async export(){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('export',{p_key:credential});},
     makeLink:(key)=>makeEntryLink(href,active,key)
@@ -103,4 +105,7 @@ export async function initializeCloud() {
 export async function api(payload){if(!client)throw new Error('共享记录正在配置，暂时不能创建空间。');return client.api(payload);}
 export async function connectionProbe(){if(!client)return null;return client.probe();}
 export function entryLink(key){if(!client)throw new Error('共享记录正在配置。');return client.makeLink(key);}
-export async function exportRecords(){if(!client)throw new Error('请先打开你的专属入口。');return client.export();}
+export async function exportRecords(){if(!client)throw new Error('请先打开你的专属入口。');const records=await client.export();const letters=await client.capsules();return {...records,capsules:letters.capsules};}
+export async function getCapsules(){if(!client)throw new Error('请先打开你的专属入口。');return client.capsules();}
+export async function sealCapsule(day,message){if(!client)throw new Error('请先打开你的专属入口。');return client.sealCapsule(day,message);}
+

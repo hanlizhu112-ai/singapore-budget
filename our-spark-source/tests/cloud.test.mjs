@@ -34,3 +34,14 @@ test('room creation retries use the same private tokens after a lost response',a
  await client.importEntry({setup:secureToken()});await assert.rejects(client.api({action:'create',owner:'我',partner:'他'}));await client.api({action:'create',owner:'我',partner:'他'});
  assert.equal(bodies[0].p_owner_token,bodies[1].p_owner_token);assert.equal(bodies[0].p_partner_token,bodies[1].p_partner_token);assert.equal(client.hasSetup(),false);
 });
+
+
+test('capsule requests reuse the existing room credential and never accept client-supplied identity or streak',async()=>{
+ const calls=[];const store=memory();
+ const client=createCloudClient({config,href,storage:store,fetchImpl:async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return Response.json(url.endsWith('our_spark_state')?{resumeKey:key}:{capsules:[]});}});
+ await client.importEntry({key});await client.capsules();await client.sealCapsule(60,'一封自愿写下的信');
+ assert.deepEqual(calls.at(-2).body,{p_key:key});
+ assert.deepEqual(calls.at(-1).body,{p_key:key,p_day:60,p_message:'一封自愿写下的信'});
+ assert.ok(calls.at(-1).url.endsWith('/our_spark_seal_capsule'));
+ assert.equal((await client.api()).resumeKey,key);
+});
