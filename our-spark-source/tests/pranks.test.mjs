@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
-import {reservePrankPlayback,rememberPrankPlayback} from '../src/pranks.mjs';
+import {reservePrankPlayback,rememberPrankPlayback,isFireVisible} from '../src/pranks.mjs';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const base=read('../supabase/setup.sql'),capsules=read('../supabase/capsules.sql'),extension=read('../supabase/pranks.sql');
 const token=()=>randomBytes(32).toString('hex');
@@ -67,4 +67,16 @@ test('browser receipts reserve once, survive reload after playback, and never to
  assert.ok(reservePrankPlayback(state,new Set(),storage));rememberPrankPlayback(first.key,storage);
  assert.equal(reservePrankPlayback(state,new Set(),storage),null);assert.equal(values.get('our-spark-v11:entry:key'),'keep-existing-key');
  assert.equal(reservePrankPlayback({...state,prank:{id:'bad',kind:'unknown'}},new Set(),storage),null);
+});
+test('the fire must be visible, foregrounded and unobstructed before a surprise plays',()=>{
+ const view={innerHeight:700,innerWidth:390,visualViewport:{height:700,width:390}};
+ let hidden=false,modal=false,rect={top:180,bottom:496,left:30,right:360,height:316,width:330};
+ const doc={get hidden(){return hidden;},querySelector:()=>modal?{}:null};
+ const element={isConnected:true,getBoundingClientRect:()=>rect};
+ assert.equal(isFireVisible(element,doc,view),true);
+ rect={...rect,top:-250,bottom:66};assert.equal(isFireVisible(element,doc,view),false);
+ rect={...rect,top:180,bottom:496};hidden=true;assert.equal(isFireVisible(element,doc,view),false);
+ hidden=false;modal=true;assert.equal(isFireVisible(element,doc,view),false);
+ modal=false;view.visualViewport.height=300;assert.equal(isFireVisible(element,doc,view),false);
+ assert.equal(isFireVisible(null,doc,view),false);
 });
