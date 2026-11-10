@@ -45,3 +45,10 @@ test('capsule requests reuse the existing room credential and never accept clien
  assert.ok(calls.at(-1).url.endsWith('/our_spark_seal_capsule'));
  assert.equal((await client.api()).resumeKey,key);
 });
+
+test('prank setup and acknowledgement retain the original entry and derive recipient identity on the server',async()=>{
+ const calls=[];const client=createCloudClient({config,href,storage:memory(),fetchImpl:async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return Response.json({resumeKey:key});}});
+ await client.importEntry({key});await client.setPrank('popcorn');await client.ackPrank('11111111-1111-4111-8111-111111111111');
+ assert.deepEqual(calls.at(-2).body,{p_key:key,p_kind:'popcorn'});assert.deepEqual(calls.at(-1).body,{p_key:key,p_id:'11111111-1111-4111-8111-111111111111'});
+ assert.equal((await client.api()).resumeKey,key);
+});

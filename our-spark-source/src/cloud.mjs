@@ -73,6 +73,8 @@ export function createCloudClient({config,fetchImpl=globalThis.fetch,storage,hre
       if(!credential)throw Object.assign(new Error('请创建空间，或打开你的专属入口。'),{status:401});
       return rpc(payload?.action==='checkin'?'checkin':'state',{p_key:credential});
     },
+    async setPrank(kind){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('set_prank',{p_key:credential,p_kind:kind});},
+    async ackPrank(id){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('ack_prank',{p_key:credential,p_id:id});},
     async capsules(){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('capsules',{p_key:credential});},
     async sealCapsule(day,message){if(!credential)throw new Error('请先打开你的专属入口。');return rpc('seal_capsule',{p_key:credential,p_day:day,p_message:message});},
     async probe(){return rpc('probe');},
@@ -109,3 +111,6 @@ export async function exportRecords(){if(!client)throw new Error('请先打开�
 export async function getCapsules(){if(!client)throw new Error('请先打开你的专属入口。');return client.capsules();}
 export async function sealCapsule(day,message){if(!client)throw new Error('请先打开你的专属入口。');return client.sealCapsule(day,message);}
 
+
+export async function setPrank(kind){if(!client)throw new Error('请先打开你的专属入口。');return client.setPrank(kind);}
+export async function ackPrank(id){if(!client)throw new Error('请先打开你的专属入口。');return client.ackPrank(id);}

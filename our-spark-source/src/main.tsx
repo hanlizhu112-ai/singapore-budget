@@ -8,3 +8,5 @@ createRoot(document.getElementById('root')!).render(<App />);
 import './fire.css';
 
 import './space.css';
+
+import './pranks.css';

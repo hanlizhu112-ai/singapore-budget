@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { FIRE_STAGES } from './stages.mjs';
+import PrankEffects from './PrankEffects';
+import type {PrankEffect} from './PrankEffects';
 
 type Stage = typeof FIRE_STAGES[number];
 
@@ -31,16 +33,18 @@ function Embers({stage,burst}:{stage:Stage;burst:number}) {
   return <canvas ref={ref} width={360} height={320} className="fire-embers" aria-hidden="true"/>;
 }
 
-export default function FireArtwork({stage,burst=0,quiet=false,checked,reaction}:{stage:Stage;burst?:number;quiet?:boolean;checked?:number[];reaction?:{kind:string;role:number;id:number}|null}) {
+export default function FireArtwork({stage,burst=0,quiet=false,checked,reaction,prank}:{stage:Stage;burst?:number;quiet?:boolean;checked?:number[];reaction?:{kind:string;role:number;id:number}|null;prank?:PrankEffect|null}) {
   const id=useId().replace(/[^a-zA-Z0-9]/g,'');
   const [top,bottom,core]=stage.id==='wildfire'?['#fff0ad','#ff9a35','#fffbea']:stage.id==='blaze'?['#ffdf7c','#f64630','#fff2b3']:['#ffda8c','#f86a2d','#ffe8a1'];
   const fire=`url(#${id}fire)`,heart=`url(#${id}heart)`,wood=`url(#${id}wood)`;
   const logs=stage.day>=30;
-  return <div className={`fire-artwork art-${stage.id}${quiet?' is-quiet':''}${checked?' relay-artwork':''}`} data-checked={checked?.length} data-first-role={checked?.length===1?checked[0]:undefined} role="img" aria-label={`${stage.title}：${stage.description}`}>
+  return <div className={`fire-artwork art-${stage.id}${quiet?' is-quiet':''}${checked?' relay-artwork':''}${prank?' prank-'+prank.kind:''}`} data-checked={checked?.length} data-first-role={checked?.length===1?checked[0]:undefined} role="img" aria-label={`${stage.title}：${stage.description}`}>
     <div className="fire-aura"/>
     {checked&&<><span className={'relay-side-glow left '+(checked.includes(0)?'lit':'')}/><span className={'relay-side-glow right '+(checked.includes(1)?'lit':'')}/></>}
     {reaction&&<div key={reaction.id} className={`relay-reaction reaction-${reaction.kind} from-${reaction.role}`} aria-hidden="true"><span className="falling-log"/>{reaction.kind==='complete'&&<><span className="merging-flame left"/><span className="merging-flame right"/><span className="relay-ring"/></>}</div>}
+    {prank&&<PrankEffects effect={prank}/>}
     <Embers stage={stage} burst={burst}/>
+    <div className="fire-drawing">
     <svg viewBox="0 0 360 320" className="fire-illustration" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id={`${id}fire`} x1="0" y1="0" x2="0" y2="1"><stop stopColor={top}/><stop offset=".48" stopColor={stage.id==='blaze'?'#ff9b38':'#ffbd50'}/><stop offset="1" stopColor={bottom}/></linearGradient>
@@ -84,5 +88,6 @@ export default function FireArtwork({stage,burst=0,quiet=false,checked,reaction}
         <g className="fire-stars" fill="#ffe5a1"><path d="M85 128l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/><path d="M271 111l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><circle cx="137" cy="81" r="2"/><circle cx="239" cy="67" r="1.5"/></g>
       </g>}
     </svg>
+    </div>
   </div>;
 }
